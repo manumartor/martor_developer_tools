@@ -1,5 +1,15 @@
 #!/bin/bash
 
+require_sudo(){
+	#check it's running as root
+	if [ "$EUID" -ne 0 ];  then
+		echo ""
+		echo "STOP ERROR: Please run this script as root"
+		echo ""
+		exit 1
+	fi
+}
+
 echo_dots(){
 	local str="- $1"
 	local strlen=${#str}
@@ -12,40 +22,43 @@ echo_dots(){
 	echo -n "$str "
 }
 
+require_sudo
 
+
+echo_dots "Updating os"; echo ""
 apt update
 apt upgrade -y
 echo_dots "Updating os"; echo "OK"
 
 
-#virtual keyboard
-echo_dots "Installing virtual keyboard"
-apt install -y -qq onboard at-spi2-core
-echo "OK"
-
-
 #generic packages
-echo_dots "Installing generic pakages"
-apt install -y -qq htop vim git
-echo "OK"
+echo_dots "Installing generic pakages"; echo ""
+apt install -y -htop vim git lm-sensors
+echo_dots "Installing generic pakages"; echo "OK"
+
+
+#virtual keyboard
+echo_dots "Installing virtual keyboard"; echo ""
+apt install -y onboard at-spi2-core
+echo_dots "Installing virtual keyboard"; echo "OK"
 
 
 #right click
-echo_dots "Installing right click"
-apt install -y -qq tochegg
-echo "OK"
+echo_dots "Installing right click"; echo ""
+apt install -y touchegg
+echo_dots "Installing right click"; echo "OK"
 
 
 
 #rotation screen
-echo_dots "Installing rotation screen"
+echo_dots "Installing rotation screen"; echo ""
 cd /tmp
 git clone https://github.com/raspad-tablet/raspad-auto-rotator
 cd raspad-auto-rotator
 python3 install.py
 cd ..
 rm -rf raspad-auto-rotator
-echo "OK"
+echo_dots "Installing rotation screen"; echo "OK"
 
 
 
@@ -94,7 +107,7 @@ echo "-------------------------------------------"
 exit 0
 EOF
 
-cat <<EOF >> /home/$USER/.bashrc
+cat <<EOF >> /home/$(logname)/.bashrc
 	# MARTOR CUSTOMIZATIONS
 	alias l='ls -lah'
 	alias d=docker
@@ -106,4 +119,4 @@ echo "OK"
 
 
 echo_dots "Rebooting system"
-reboot -t 5
+reboot -r +5
