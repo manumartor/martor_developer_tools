@@ -69,23 +69,23 @@ cat <<EOF > /usr/local/bin/raspi-info
 # Shell script: raspi.info.sh
 # Autor: Santiago Crespo
 
-cpu=$(cat /sys/class/thermal/thermal_zone0/temp)
-echo "$(date) @ $(hostname)"
+cpu=\$(cat /sys/class/thermal/thermal_zone0/temp)
+echo "\$(date) @ \$(hostname)"
 echo "-------------------------------------------"
-echo "Temp.CPU => $((cpu/1000))'Cº"
-echo "Temp.GPU => $(vcgencmd measure_temp)"
+echo "Temp.CPU => \$((cpu/1000))'Cº"
+echo "Temp.GPU => \$(vcgencmd measure_temp)"
 echo "-------------------------------------------"
 
 echo ""
 echo "Otros datos del sistema"
 echo "-------------------------------------------"
-echo "CPU $(vcgencmd measure_clock arm)'Hz"
-echo "CPU $(vcgencmd measure_volts core)"
+echo "CPU \$(vcgencmd measure_clock arm)'Hz"
+echo "CPU \$(vcgencmd measure_volts core)"
 echo "Memoria repartida entre el sistema y la gpu:"
-echo "Sistema $(vcgencmd get_mem arm)"
-echo "GPU $(vcgencmd get_mem gpu)"
+echo "Sistema \$(vcgencmd get_mem arm)"
+echo "GPU $\(vcgencmd get_mem gpu)"
 echo "-------------------------------------------"
-echo "Memoria libre $(free -h)"
+echo "Memoria libre \$(free -h)"
 echo "-------------------------------------------"
 
 
@@ -99,16 +99,17 @@ cat <<EOF > /usr/local/bin/raspi-temp
 # Shell script: temp.sh
 # Autor: Santiago Crespo
 
-cpu=$(cat /sys/class/thermal/thermal_zone0/temp)
-echo "$(date) @ $(hostname)"
+cpu=\$(cat /sys/class/thermal/thermal_zone0/temp)
+echo "\$(date) @ \$(hostname)"
 echo "-------------------------------------------"
-echo "Temp.CPU => $((cpu/1000))'Cº"
-echo "Temp.GPU => $(vcgencmd measure_temp)"
+echo "Temp.CPU => \$((cpu/1000))'Cº"
+echo "Temp.GPU => \$(vcgencmd measure_temp)"
 echo "-------------------------------------------"
 
 exit 0
 EOF
 chmod +x /usr/local/bin/raspi-temp
+usermod -aG video $(logname)
 
 cat <<EOF >> /home/$(logname)/.bashrc
 	# MARTOR CUSTOMIZATIONS
