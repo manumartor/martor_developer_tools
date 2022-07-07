@@ -33,7 +33,7 @@ echo_dots "Updating os"; echo "OK"
 
 #generic packages
 echo_dots "Installing generic pakages"; echo ""
-apt install -y -htop vim git lm-sensors
+apt install -y htop vim git lm-sensors
 echo_dots "Installing generic pakages"; echo "OK"
 
 
@@ -119,4 +119,5 @@ echo "OK"
 
 
 echo_dots "Rebooting system"
-reboot -r +5
+shutdown -r +5
+echo "OK"
