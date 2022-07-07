@@ -121,5 +121,6 @@ echo "OK"
 
 
 echo_dots "Rebooting system"
-shutdown -r +5
+sleep 5
+shutdown -r now
 echo "OK"
