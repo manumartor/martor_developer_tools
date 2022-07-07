@@ -64,9 +64,9 @@ echo_dots "Installing rotation screen"; echo "OK"
 
 #raspi commands
 echo_dots "Installing raspi commands"
-cat <<EOF > /usr/local/bin/raspi-temp
+cat <<EOF > /usr/local/bin/raspi-info
 #!/bin/bash
-# Shell script: temp.sh
+# Shell script: raspi.info.sh
 # Autor: Santiago Crespo
 
 cpu=$(cat /sys/class/thermal/thermal_zone0/temp)
@@ -91,7 +91,7 @@ echo "-------------------------------------------"
 
 exit 0
 EOF
-chmod +x /usr/local/bin/raspi-temp
+chmod +x /usr/local/bin/raspi-info
 
 
 cat <<EOF > /usr/local/bin/raspi-temp
