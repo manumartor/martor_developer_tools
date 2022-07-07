@@ -91,6 +91,8 @@ echo "-------------------------------------------"
 
 exit 0
 EOF
+chmod +x /usr/local/bin/raspi-temp
+
 
 cat <<EOF > /usr/local/bin/raspi-temp
 #!/bin/bash
@@ -106,6 +108,7 @@ echo "-------------------------------------------"
 
 exit 0
 EOF
+chmod +x /usr/local/bin/raspi-temp
 
 cat <<EOF >> /home/$(logname)/.bashrc
 	# MARTOR CUSTOMIZATIONS
@@ -113,7 +116,6 @@ cat <<EOF >> /home/$(logname)/.bashrc
 	alias d=docker
 	alias dc=docker-compose
 EOF
-
 source /home/martor/.bashrc
 echo "OK"
 
