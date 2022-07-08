@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#BE CAREFULL: modern linux distros use wayland as desktop manager system and this causes tha anything works fine, so for every thing works fine is nessesary use a x11 system, see video for more info: https://www.youtube.com/watch?v=7qzp24o9jec
+# for disable wayland see: https://www.dagorret.com.ar/como-habilitar-deshabilitar-wayland-en-ubuntu-22-04-desktop/
+
+
 require_sudo(){
 	#check it's running as root
 	if [ "$EUID" -ne 0 ];  then
@@ -33,7 +37,7 @@ echo_dots "Updating os"; echo "OK"
 
 #generic packages
 echo_dots "Installing generic pakages"; echo ""
-apt install -y htop vim git lm-sensors
+apt install -y htop vim git
 echo_dots "Installing generic pakages"; echo "OK"
 
 
@@ -46,6 +50,8 @@ echo_dots "Installing virtual keyboard"; echo "OK"
 #right click
 echo_dots "Installing right click"; echo ""
 apt install -y touchegg
+#TODO: configure to launch on boot
+
 echo_dots "Installing right click"; echo "OK"
 
 
@@ -58,6 +64,47 @@ cd raspad-auto-rotator
 python3 install.py
 cd ..
 rm -rf raspad-auto-rotator
+#configure to launch on boot
+sname="raspad-auto-rotator"
+cat <<EOF > /etc/init.d/$sname
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          $sname
+# Required-Start:    \$remote_fs \$syslog
+# Required-Stop:     \$remote_fs \$syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+
+# Carry out specific functions when asked to by the system
+case "\$1" in
+  start)
+    echo "Starting $sname services"
+    /usr/local/bin/raspad-auto-rotator 2>&1 >/dev/null &
+    ;;
+  stop)
+    echo "Stopping $sname services"
+    /usr/local/bin/raspad-auto-rotator stop 2>&1 >/dev/null &
+    ;;
+  restart)
+    \$0 stop
+    sleep 3
+    \$0 start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/$sname {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
+EOF
+
+chmod +x /etc/init.d/$sname
+update-rc.d $sname defaults
+/etc/init.d/$sname start
 echo_dots "Installing rotation screen"; echo "OK"
 
 
