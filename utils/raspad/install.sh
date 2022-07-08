@@ -127,11 +127,11 @@ cat <<EOF > /etc/init.d/$sname
 case "\$1" in
   start)
     echo "Starting $sname services"
-    /usr/local/bin/raspad-auto-rotator 2>&1 >/dev/null &
+    /usr/local/bin/$sname 2>&1 >/var/log/$sname &
     ;;
   stop)
     echo "Stopping $sname services"
-    /usr/local/bin/raspad-auto-rotator stop 2>&1 >/dev/null &
+    /usr/local/bin/$sname stop 2>&1 >/dev/null &
     ;;
   restart)
     \$0 stop
@@ -156,7 +156,7 @@ echo_dots "Installing rotation screen"; echo "OK"
 
 #raspi commands
 echo_dots "Installing raspi commands"
-cat <<EOF > /usr/local/bin/raspi-info
+cat <<EOF > /usr/local/bin/rpi-info
 #!/bin/bash
 # Shell script: raspi.info.sh
 # Autor: Santiago Crespo
@@ -175,18 +175,17 @@ echo "CPU \$(vcgencmd measure_clock arm)'Hz"
 echo "CPU \$(vcgencmd measure_volts core)"
 echo "Memoria repartida entre el sistema y la gpu:"
 echo "Sistema \$(vcgencmd get_mem arm)"
-echo "GPU $\(vcgencmd get_mem gpu)"
+echo "GPU \$(vcgencmd get_mem gpu)"
 echo "-------------------------------------------"
 echo "Memoria libre \$(free -h)"
 echo "-------------------------------------------"
 
-
 exit 0
 EOF
-chmod +x /usr/local/bin/raspi-info
+chmod +x /usr/local/bin/rpi-info
 
 
-cat <<EOF > /usr/local/bin/raspi-temp
+cat <<EOF > /usr/local/bin/rpi-temp
 #!/bin/bash
 # Shell script: temp.sh
 # Autor: Santiago Crespo
@@ -200,7 +199,7 @@ echo "-------------------------------------------"
 
 exit 0
 EOF
-chmod +x /usr/local/bin/raspi-temp
+chmod +x /usr/local/bin/rpi-temp
 usermod -aG video $(logname)
 
 cat <<EOF >> /home/$(logname)/.bashrc
