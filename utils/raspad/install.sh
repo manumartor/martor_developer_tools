@@ -51,7 +51,52 @@ echo_dots "Installing virtual keyboard"; echo "OK"
 echo_dots "Installing right click"; echo ""
 apt install -y touchegg
 #TODO: configure to launch on boot
+sname="touchegg"
+cat <<EOF > /etc/init.d/$sname
+#!/bin/sh
 
+### BEGIN INIT INFO
+# Provides:          $sname
+# Required-Start:    \$remote_fs \$syslog
+# Required-Stop:     \$remote_fs \$syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+
+# Carry out specific functions when asked to by the system
+case "\$1" in
+  start)
+    echo "Starting $sname services"
+    /usr/bin/$sname 2>&1 > /var/log/$sname &
+    ;;
+  stop)
+    echo "Stopping $sname services"
+    processes=\$(ps aux | grep $sname)
+    echo "\$processes" | while IFS= read -r line; do
+        echo "... \$line ..."
+        pid=\$(echo \$line| awk '{print \$2;}')
+        kill -9 \$pid
+    done
+    ;;
+  restart)
+    \$0 stop
+    sleep 3
+    \$0 start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/$sname {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+
+exit 0
+EOF
+
+chmod +x /etc/init.d/$sname
+update-rc.d $sname defaults
+/etc/init.d/$sname start
 echo_dots "Installing right click"; echo "OK"
 
 
@@ -159,10 +204,10 @@ chmod +x /usr/local/bin/raspi-temp
 usermod -aG video $(logname)
 
 cat <<EOF >> /home/$(logname)/.bashrc
-	# MARTOR CUSTOMIZATIONS
-	alias l='ls -lah'
-	alias d=docker
-	alias dc=docker-compose
+# MARTOR CUSTOMIZATIONS
+alias l='ls -lah'
+alias d=docker
+alias dc=docker-compose
 EOF
 source /home/martor/.bashrc
 echo "OK"
