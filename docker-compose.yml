@@ -1,0 +1,129 @@
+version: '2.2'
+services:
+    vsc:
+        container_name: vsc
+        image: "codercom/code-server"
+        environment:
+            - PASSWORD=${ROOT_PASSWORD}
+        volumes:
+            - "./vsc/appdata/config:/config"
+            - "../:/home/coder"
+        ports:
+            - ${VSC_PORT}:8080
+        networks:
+            - martor-net
+    #superadmin:
+    #    container_name: superadmin
+    #    build:
+    #      context: ./superadmin
+    #      dockerfile: Dockerfile-superadmin
+    #    env_file:
+    #        - .env
+    #    volumes:
+    #        - ../:/www/Proyectos
+    #        - ./superadmin-data/database:/www/superadmin/databases
+    #        - ./superadmin-data/acme:/www/acme
+    #        - ./superadmin-data/logs:/www/logs
+    #        - ./superadmin-data/nginx:/www/nginx
+    #        - ./superadmin-data/ssl:/www/ssl
+    #        - ./superadmin-data/www:/www/www
+    #        
+    #        - ./.ssh:/root/.ssh
+    #        - ../sslcertcustom/:/www/sslcertcustom
+    #    ports:
+    #        - ${SUPERADMIN_PORT}:9999
+    #        - 80:80
+    #        - 443:443
+    #        - 35729:35729
+    #    networks:
+    #        - martor-net
+    #nodejsscan:
+    #    #info: https://github.com/ajinabraham/NodeJsScan
+    #    container_name: nodejsscan
+    #    build: ./nodejsscan
+    #    environment:
+    #        - PGDATA=/var/lib/postgresql/data/pgdata
+    #    volumes:
+    #        - "nodejsscan_home:/src"
+    #        - "nodejsscandb_home:/var/lib/postgresql/data"
+    #    ports:
+    #        - ${NODEJSSCAN_PORT}:9090
+    #    expose:
+    #        - 9090
+    #    networks:
+    #        - martor-net
+    #    hostname: nodejsscan
+    #sonarqube:
+    #    #info: https://hub.docker.com/_/sonarqube
+    #    container_name: sonarqube
+    #    #image: sunarqube:8-community
+    #    build:
+    #        context: ./sonarqube-customizations
+    #        args:
+    #            SONAR_VERSION_ARG: 7.8 #arm alpine jdk8 -> 7.8 #LAST LTS 8.9.6.50800 #versions info: https://binaries.sonarsource.com/Distribution/sonarqube/
+    #    environment:
+    #        - SONARQUBE_USER=admin
+    #        - SONARQUEB_PASSWORD=${ROOT_PASSWORD}
+    #    volumes:
+    #        - "sonarqube_home:/opt/sonarqube/data"
+    #    #ports:
+    #        #- ${SONARQUBE_PORT}:9000
+    #    expose:
+    #        - 9000
+    #    depends_on:
+    #        - sonarqube-db
+    #    networks:
+    #        - martor-net
+    #sonarqube-db:
+    #    container_name: sonarqube-db
+    #    image: postgres:12.3
+    #    environment:
+    #        - POSTGRES_USER=sonar-user
+    #        - POSTGRES_PASSWORD=sonar-password
+    #        - POSTGRES_DB=sonar
+    #        - PGDATA=/var/lib/postgresql/data/pgdata
+    #    volumes:
+    #        - "sonarqubedb_home:/var/lib/postgresql/data"
+    #    networks:
+    #        - martor-net
+    #grafana:
+    #    container_name: grafana
+    #    image: grafana/grafana-enterprise:8.3.3-ubuntu
+    #    volumes:
+    #        - "grafana_home:/var/lib/grafana"
+    #        - "prometheus_home:/var/lib/prometheus/"
+    #        - "./grafana-customizations/prometheus.yml:/srv/prometheus/prometheus.yml"
+    #        - "./grafana-customizations/install-prometheus.sh:/srv/install-prometheus.sh"
+    #        - "./grafana-customizations/prometheus.initd.sh:/etc/init.d/prometheus"
+    #    ports:
+    #    #    - 9987:3000
+    #        - 9988:9090
+    #    expose:
+    #        - 3000
+    #    networks:
+    #        - martor-net
+    #guacamole:
+    #    container_name: guacamole
+    #    image: oznu/guacamole:armhf
+    #    restart: always
+    #    environment:
+    #        - GUACD_LOG_LEVEL=debug
+    #    volumes:
+    #        - guacamole_home:/config
+    #    expose:
+    #        - 8080
+    #    networks:
+    #        - martor-net
+networks:
+    martor-net:
+      driver: bridge
+volumes:
+  jenkins_home:
+  nodejsscan_home:
+  nodejsscandb_home:
+  sonarqube_home:
+  sonarqubedb_home:
+  grafana_home:
+  prometheus_home:
+  guacamole_home:
+
