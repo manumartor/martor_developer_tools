@@ -1,0 +1,14 @@
+
+Win + R => cmd
+
+winget install --id Git.Git -e --source winget
+
+
+
+git_bash.exe
+
+ssh-keygen -t ed25519 -C "manu.martor@gmail.com"
+
+
+
+
