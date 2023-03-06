@@ -1,0 +1,43 @@
+<div data---="invisible" class="invisible" data-scope="packagespanel">
+	<div data---="inputsearch__?.search__placeholder:@(Search);$binding:1;$delay:50"></div>
+	<div data---="viewbox__?.search__margin:78;parent:.ui-dockable-body;scrollbar:1" class="invisible">
+		<div data-bind="?.items__template" data---="search__?.search__selector:div">
+			<script type="text/html">
+				{{ foreach m in value }}
+					<div class="listitem exec" data-exec="?/download" data-url="{{ m.url }}" data-search="{{ m.name }}" data-name="{{ m.filename }}"><i class="far fa-copy"></i> {{ m.name }}</div>
+				{{ end }}
+			</script>
+		</div>
+	</div>
+</div>
+
+<script>
+	PLUGIN('packagespanel', function(exports) {
+
+		exports.reload = function() {
+			SET('?.search', '');
+			exports.element.SETTER(true, 'inputsearch/focus');
+			exports.refresh();
+		};
+
+		exports.refresh = function() {
+			AJAX('GET /api/external/packages/', function(response) {
+				response.quicksort('name');
+				SET('?.items', response);
+				SETTER('dockable/show', 'prop');
+			});
+		};
+
+		exports.download = function(el) {
+			SETTER('approve/show', '@(Are you sure you want to download selected package?)', '"cloud-download" @(Download)', function() {
+				SETTER('loading/show');
+				AJAX('POST /api/external/packages/' + code.data.id, { url: el.attrd('url'), name: el.attrd('name') }, function() {
+					SETTER('loading/hide', 500);
+					EXEC('code/refresh');
+					NULL('common.form');
+					SETTER('notifybar/success', '@(Package has been downloaded succesfully.)');
+				});
+			});
+		};
+	})
+</script>

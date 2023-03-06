@@ -1,0 +1,94 @@
+<!--
+	It depends on "code editor"
+-->
+
+<div data---="viewbox__codechanges__margin:51;parent:.ui-dockable-body;scrollbar:1;scrollbarshadow:1" class="invisible">
+	<div data-bind="!codechanges__template">
+		<script type="text/html">
+			{{ if value.group.length }}
+			<div class="changedfiles">
+				<div><i class="far fa-clock-o"></i>@(Last changes)</div>
+				<div>
+				{{ foreach m in value.group }}
+					<div class="changefile">
+						<div class="path exec" data-exec="codechanges/load" data-path="{{ m.path }}">{{ m | changesicon }}{{ m.path }}</div>
+					</div>
+				{{ end }}
+				</div>
+			</div>
+			{{ fi }}
+			{{ foreach m in value.files }}
+				<div class="changeitem exec" data-exec="codechanges/load" data-path="{{ m.path }}">
+					<div class="photo">{{ m.user | initials }}</div>
+					<div class="meta">
+						<div class="path">{{ if m.changes }}<span>+{{ m.changes }}</span>{{ fi }}{{ m.path }}</div>
+						<div class="user">{{ m.date | time2 }}{{ m | changesicon }}<span class="badge badge-gray badge-small">{{ m.type }}</span><span title="@(Spent time:) {{ m.time | timespent }}">{{ m.user }}</span></div>
+					</div>
+				</div>
+			{{ end }}
+		</script>
+	</div>
+</div>
+
+<script>
+	PLUGIN('codechanges', function(exports) {
+
+		exports.reload = function() {
+			SETTER('dockable/show', 'prop');
+			exports.refresh();
+		};
+
+		exports.load = function(el) {
+			SETTER('tree/selectpath', el.attrd('path') || '');
+		};
+
+		exports.refresh = function() {
+			var qs = {};
+			qs.path = code.editor.path;
+			AJAX('GET /api/projects/{id}/changes/'.arg(code.data), qs, function(response) {
+				response.quicksort('date', false);
+
+				var changes = {};
+				var take = response.length > 50 ? 50 : response.length;
+
+				for (var i = 0; i < take; i++) {
+					var item = response[i];
+					changes[item.path] = (changes[item.path] || 0) + 1;
+				}
+
+				var last = [];
+				var keys = Object.keys(changes);
+
+				for (var i = 0; i < take; i++) {
+					var item = response[i];
+					if (changes[item.path]) {
+						last.push(item);
+						delete changes[item.path];
+					}
+				}
+
+				SET('codechanges', { files: response, group: last.take(10) });
+			});
+		};
+
+		ON('knockknock', function(counter) {
+			if (common.form === 'changes')
+				exports.refresh();
+		});
+	});
+
+	Thelpers.changesicon = function(item) {
+		var template = '<i class="fa fa-{0}"></i>';
+		switch (item.type) {
+			case 'remove':
+				return template.format('minus-circle red');
+			case 'upload':
+			case 'create':
+				return template.format('plus-circle green');
+			case 'save':
+				return template.format('floppy-o');
+		}
+		return '';
+	};
+
+</script>

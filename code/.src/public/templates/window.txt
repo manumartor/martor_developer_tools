@@ -1,0 +1,19 @@
+<div data---="window__common.window__if:~PATH~;icon:hashtag;autofocus:true;reload:?/reload;scrollbar:1" class="hidden" data-scope="~PATH~">
+	<div class="padding">
+		YOUR CODE
+	</div>
+</div>
+
+<script>
+
+	PLUGIN('~PATH~', function(exports) {
+
+		exports.reload = function(com) {
+			var model = GET('?');
+			var id = model ? model.id : null;
+			com.reconfigure({ title: id ? '@(Update)' : '@(Create)' });
+		};
+
+	});
+
+</script>

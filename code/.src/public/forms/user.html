@@ -1,0 +1,68 @@
+<div data---="form__common.form__if:usersform;icon:robot;width:700;reload:usersform/reload;autofocus:1;submit:usersform/submit" class="hidden">
+	<div data-scope="usersform">
+		<div class="padding">
+			<div class="row">
+				<div class="col-sm-6 m">
+					<div data---="input__?.id__required:true;placeholder:@(petersirka);type:lower__''" data-bind="?.isnew__enabled">@(ID)</div>
+				</div>
+				<div class="col-sm-6 m">
+					<div data---="input__?.name__required:true__''">@(Name)</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6 m">
+					<div data---="input__?.email__required:true__'@'">@(Email address)</div>
+				</div>
+				<div class="col-sm-6 m">
+					<div data---="input__?.phone__null__''">@(Phone number)</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6 m">
+					<div data---="input__?.position__null__'Developer'">@(Position)</div>
+				</div>
+				<div class="col-sm-6 m">
+					<div data---="input__?.password__required:true__GUID()">@(Password)</div>
+					<div class="help"><span class="exec link" data-exec="usersform/generate">@(Generate password)</span></div>
+				</div>
+			</div>
+			<hr class="nmt" style="margin-bottom:10px" />
+			<div data---="radiobutton__?.darkmode__items:@(Light mode)|0,@(Dark mode)|1,@(Day/Night)|2;type:number;inline:1__0"></div>
+			<hr class="nmt" />
+			<div data---="checkbox__?.sa__null__false" class="b">@(User is administrator)</div>
+			<div data---="checkbox__?.blocked__null__false">@(User is blocked)</div>
+			<div data---="checkbox__?.dbviewer__null__false">@(Allow to open DB viewer)</div>
+			<div data---="checkbox__?.localsave__null__true">@(Enable local storing of files)</div>
+		</div>
+	</div>
+	<nav data---="validation__usersform">
+		<button name="submit" disabled="disabled"><i class="far fa-floppy-o mr5"></i>@(SAVE)</button>
+		<button name="cancel">@(Cancel)</button>
+	</nav>
+</div>
+
+<script>
+	PLUGIN('usersform', function(exports) {
+
+		exports.reload = function(com) {
+			com.reconfigure({ title: GET('?.id') ? '@(Edit user)' : '@(New user)' });
+		};
+
+		exports.generate = function() {
+			SET('?.password', GUID());
+		};
+
+		exports.submit = function() {
+			var data = CLONE(GETR('?'));
+			AJAX('POST /api/users/', data, function(response) {
+				if (response.success) {
+					SET('common.form', '');
+					SETTER('notifybar/success', '@(The user has been saved successfully.)');
+					EXEC('users/refresh');
+				} else
+					SET('?.response', response);
+			});
+		};
+
+	});
+</script>

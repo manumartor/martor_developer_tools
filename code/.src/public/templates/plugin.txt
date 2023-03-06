@@ -1,0 +1,20 @@
+<div data-scope="~PATH~">
+	<div class="padding">
+		YOUR CODE
+	</div>
+</div>
+
+<script>
+
+	PLUGIN('~PATH~', function(exports) {
+
+		exports.reload = function() {
+			exports.refresh();
+		};
+
+		exports.refresh = function() {
+		};
+
+	});
+
+</script>

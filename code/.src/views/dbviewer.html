@@ -1,0 +1,652 @@
+@{layout('')}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>DB VIEWER</title>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=10" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
+	<meta name="robots" content="all,follow" />
+	<link rel="stylesheet" href="/css/cdn.min.css" />
+	@{if CONF.proicons}
+	<link rel="stylesheet" href="https://cdn.componentator.com/spa.min@18pro.css" />
+	@{else}
+	<link rel="stylesheet" href="/css/spa.min.css" />
+	@{fi}
+	<script src="/js/cdn.min.js"></script>
+	@{import('meta', 'head', 'ui.css + default.css', 'editor.js + ui.js + func.js + default.js', 'favicon.ico')}
+</head>
+<body data---="exec" class="@{if (user.darkmode === 2 && (NOW.getHours()<=6 || NOW.getHours()>=18)) || (user.darkmode !== 0 && user.darkmode !== 2)}td @{fi}invisible" data-jc-class="invisible">
+
+	<div data---="LAZY directory__null__placeholder:@(Search)"></div>
+	<div data---="LAZY menu"></div>
+	<div data---="LAZY notifybar"></div>
+
+	<div data---="message"></div>
+	<div data---="loading"></div>
+
+	<div class="database">
+
+		<div data---="layout__null__parent:window;resizepanel:resizepanels" class="invisible">
+
+			<script type="text/plain">
+				{
+					top: { size: 213, minsize: 150, resize: true },
+					left: { size: 200, minsize: 200, resize: true },
+					main: {}
+				}
+			</script>
+
+			<section data-type="top2" data-size="213" class="topsection">
+				<div data---="codemirror__dbview.query__height:150;type:sql;cmdenter:dbview.submit"></div>
+				<div class="help"><span class="link exec" data-exec="dbview.history"><i class="fa fa-history"></i>@(History)</span><span class="link exec b red" data-exec="dbview.execute"><i class="fa fa-play-circle"></i>@(Run query)</span><span class="link exec" data-exec="dbview.options"><i class="fa fa-cog"></i>@(Options)</span><span data-bind="dbview.duration__text b__show" class="hidden"><i class="far fa-clock"></i><b></b></span><span class="pull-right"><i class="fa fa-keyboard"></i><code data-bind="shortcutexecute__text">---</code> @(executes a query)</span></div>
+				<div data---="inputsearch__dbview.search__placeholder:@(Search in results)"></div>
+			</section>
+
+			<section data-type="left" data-size="200px" data-scrollbar="visible:true" class="leftsection">
+				<div data---="viewbox__null__parent:.ui-layout-section;scrollbar:1">
+					<div data-bind="!dbview.tree__template" class="menu">
+						<script type="text/html">
+
+							{{ if value.tables.length }}
+								<div class="caption">@(Tables)</div>
+								{{ foreach m in value.tables }}
+									<div class="item exec" data-exec="dbview.template" data-type="table"><span class="options exec" data-prevent="true" data-exec="dbview.modify"><i class="fa fa-ellipsis-h"></i></span><i class="fa fa-columns"></i>{{ m.name }}</div>
+								{{ end }}
+							{{ fi }}
+
+							{{ if value.views.length }}
+								<div class="caption">@(Views)</div>
+								{{ foreach m in value.views }}
+									<div class="item exec" data-exec="dbview.template" data-type="view"><span class="options exec" data-prevent="true" data-exec="dbview.modify"><i class="fa fa-ellipsis-h"></i></span><i class="fa fa-eye"></i>{{ m.name }}</div>
+								{{ end }}
+							{{ fi }}
+
+							{{ if value.functions.length }}
+								<div class="caption">@(Functions)</div>
+								{{ foreach m in value.functions }}
+									<div class="item exec" data-exec="dbview.template" data-type="function"><span class="options exec" data-prevent="true" data-exec="dbview.modify"><i class="fa fa-ellipsis-h"></i></span><i class="fa fa-code"></i>{{ m.name }}</div>
+								{{ end }}
+							{{ fi }}
+
+							{{ if value.procedures.length }}
+								<div class="caption">@(Procedures)</div>
+								{{ foreach m in value.procedures }}
+									<div class="item exec" data-exec="dbview.template" data-type="procedure"><span class="options exec" data-prevent="true" data-exec="dbview.modify"><i class="fa fa-ellipsis-h"></i></span><i class="fa fa-code-branch"></i>{{ m.name }}</div>
+								{{ end }}
+							{{ fi }}
+
+						</script>
+					</div>
+					<br />
+					<br />
+					<br />
+				</div>
+			</section>
+
+			<section data-type="main" data-scrollbar="visible:true">
+				<div data---="viewbox__null__parent:.ui-layout-section;scrollbar:1;$id:mainviewbox">
+					<div data-bind="dbview.rows__template__show:value&&value.length" data---="search__dbview.search__selector:tr">
+						<script type="text/html">
+							<table class="table table-small">
+								<tbody>
+								{{ foreach m in value }}
+									<tr class="dbview-row exec" data-exec="viewerdocument" data-index="{{ $index }}" data-search="{{ m.search }}">
+										{{ m.json | raw }}
+									</tr>
+								{{ end }}
+								</tbody>
+							</table>
+						</script>
+					</div>
+				</div>
+			</section>
+
+		</div>
+	</div>
+
+	@{json(user, 'userdata')}
+
+	<script>
+
+		var dbview = {};
+		var reguid = /^\d{14,}[a-z]{3}[01]{1}|^\d{9,14}[a-z]{2}[01]{1}a|^\d{4,18}[a-z]{2}\d{1}[01]{1}b|^[0-9a-f]{4,18}[a-z]{2}\d{1}[01]{1}c$/;
+		var reguid2 = /"\d{14,}[a-z]{3}[01]{1}|"\d{9,14}[a-z]{2}[01]{1}a|"\d{4,18}[a-z]{2}\d{1}[01]{1}b|"[0-9a-f]{4,18}[a-z]{2}\d{1}[01]{1}c"/g;
+		var shortcutexecute;
+		var user = PARSE('#userdata');
+
+		DEF.dateformat = 'yyyy-MM-dd HH:mm:ss';
+
+		ON('ready', function() {
+			SET('shortcutexecute', M.ua.os.toLowerCase() === 'mac' ? 'CMD+ENTER' : 'CTRL+enter');
+		});
+
+		function formatrow(row, index) {
+			var keys = Object.keys(row);
+			var builder = [];
+			var search = [];
+
+			for (var i = 0; i < keys.length; i++) {
+
+				var key = keys[i];
+				var val = row[key];
+				var format = '{0}';
+				var fv;
+
+				switch (typeof(val)) {
+					case 'string':
+
+						if (reguid.test(val))
+							format = '<span class="db-uid">{0}</span>';
+						else
+							format = '<span class="db-string">{0}</span>';
+
+						search.push(val);
+						break;
+					case 'number':
+						format = '<span class="db-number">{0}</span>';
+						if ((val + '').indexOf('.') != -1)
+							val = val.format(4);
+						else
+							val = val.format(0);
+						break;
+					case 'boolean':
+						format = '<span class="db-boolean">{0}</span>';
+						break;
+					case 'object':
+
+						if (val == null) {
+							format = '<span class="db-null">{0}</span>';
+							val = 'null';
+						} else if (val instanceof Date) {
+							format = '<span class="db-date">{0}</span>';
+							isdate = true;
+							val = val.format(fv);
+							search.push(val);
+						} else {
+							format = '<span class="db-object">{0}</span>';
+							val = JSON.stringify(val);
+							search.push(val);
+						}
+						break;
+				}
+
+				// builder.push(key + ': ' + format.format(Thelpers.encode(val)));
+				builder.push('<td>' + key + ': ' + format.format(Thelpers.encode(val)) + '</td>');
+			}
+
+			return { html: builder.join(''), search: search.join(' ') };
+		}
+
+		function formatjson(obj, count) {
+			return JSON.stringify(obj, null, '\t').replace(/\t.*?:\s/g, function(text) {
+				return '<span class="db-object">' + text + '</span>';
+			}).replace(/\/span>false/g, function(text) {
+				return '/span><span class="db-string">false</span>';
+			}).replace(/\/span>null/g, function(text) {
+				return '/span><span class="db-null">null</span>';
+			}).replace(reguid2, function(text) {
+				return '<span class="db-uid">' + text + '</span>';
+			});
+		}
+
+		function autocomplete_sort(a, b) {
+			var an = a.name || a.displayText;
+			var bn = b.name || b.displayText;
+			if (an.length < bn.length)
+				return -1;
+			else if (an.length > bn.length)
+				return 1;
+			return 0;
+		}
+
+		function refreshschema(conn, callback) {
+			AJAX('POST /api/database/pg/', { connection: conn, query: '-' }, ASETTER(true, 'message/response', function(response) {
+				var views = [];
+				var functions = [];
+				var tables = [];
+				var procedures = [];
+
+				for (var i = 0; i < response.value.length; i++) {
+					var item = response.value[i];
+					switch (item.type) {
+						case 'TABLE':
+							tables.push(item);
+							break;
+						case 'FUNCTION':
+							functions.push(item);
+							break;
+						case 'PROCEDURE':
+							procedures.push(item);
+							break;
+						case 'VIEW':
+							views.push(item);
+							break;
+					}
+				}
+
+				tables.quicksort('name');
+				views.quicksort('name');
+				functions.quicksort('name');
+				procedures.quicksort('name');
+				response.value.sort(autocomplete_sort);
+
+				callback({ tables: tables, views: views, functions: functions, procedures: procedures, all: response.value });
+			}));
+		}
+
+		function connectdb() {
+
+			var conn = NAV.query.conn;
+
+			refreshschema(conn, function(response) {
+
+				SETTER(true, 'loading/hide', 500);
+
+				var keywords;
+				var statickeywords = ['SELECT * FROM ', 'INNER JOIN ', 'LEFT JOIN ', 'CREATE TABLE ', 'DELETE FROM ', 'INSERT INTO ', 'CREATE OR REPLACE VIEW ', 'CREATE OR REPLACE FUNCTION ', 'WHERE ', 'ORDER BY ', 'GROUP BY', 'COUNT(1)', 'LIMIT ', 'OFFSET ', 'ILIKE ', 'DROP TABLE ', 'ALTER TABLE ', 'CREATE INDEX ON ', 'COMMENT ON COLUMN ', 'CONSTRAINT ', 'EXPLAIN '];
+
+				var meta = {};
+				meta.tree = response;
+				meta.query = '';
+				meta.id = 'db' + HASH(conn, true);
+				meta.query = 'SELECT * FROM ';
+
+				var cache_snip = {};
+				var snippets = {};
+				var snippetsoptions = { completeSingle: false, hint: function(cm) {
+
+					if (snippets.text.length < 2 && snippets.text !== '#') {
+						cache_snip.list = EMPTYARRAY;
+						cache_snip.from = 0;
+						cache_snip.to = 0;
+						return cache_snip;
+					}
+
+					var cur = cm.getCursor();
+					var mode = cm.getModeAt(cur);
+					var start = snippets.index;
+					var end = cur.ch;
+					var tabs = ''.padLeft(snippets.index, '\t');
+					var index = -1;
+
+					for (var i = snippets.text.length - 1; i > 0; i--) {
+						var c = snippets.text.charCodeAt(i);
+						if ((c > 64 && c < 91) || (c > 96 && c < 123) || (c > 47 && c < 58) || c === 45 || c === 95)
+							continue;
+						index = i;
+						break;
+					}
+
+					if (index > -1) {
+						index++;
+						snippets.text = snippets.text.substring(index);
+					} else
+						index = 0;
+
+					snippets.text = snippets.text.toLowerCase();
+					cache_snip.from = CodeMirror.Pos(cur.line, start);
+					cache_snip.to = CodeMirror.Pos(cur.line, end);
+
+					if (snippets.text.length < 2 && snippets.text !== '#')
+						cache_snip.list = EMPTYARRAY;
+					else {
+
+						var arr = [];
+
+						for (var i = 0; i < statickeywords.length; i++) {
+							var name = statickeywords[i];
+							var search = name.toLowerCase();
+							if (search.length > snippets.text.length && search.indexOf(snippets.text) !== -1) {
+								arr.push({ displayText: name, text: name, code: name });
+								if (arr.length > 5)
+									break;
+							}
+						}
+
+						if (keywords) {
+							for (var i = 0; i < keywords.length; i++) {
+								var name = keywords[i];
+								var search = name.toLowerCase();
+								if (search.length > snippets.text.length && search.indexOf(snippets.text) !== -1) {
+									arr.push({ displayText: name, text: name, code: name });
+									if (arr.length > 5)
+										break;
+								}
+							}
+						}
+
+						for (var i = 0; i < dbview.tree.all.length; i++) {
+							var name = dbview.tree.all[i].name;
+							var search = name.toLowerCase();
+							if (search.length > snippets.text.length && search.indexOf(snippets.text) !== -1) {
+								arr.push({ displayText: name, text: name, code: name });
+								if (arr.length > 10)
+									break;
+							}
+						}
+
+						arr.sort(autocomplete_sort);
+						cache_snip.list = arr.take(10);
+					}
+
+					return cache_snip;
+				}};
+
+
+			 	function lastIndexOf(str, chfrom) {
+					for (var i = chfrom; i > 0; i--) {
+						var c = str.substring(i - 1, i);
+						for (var j = 1; j < arguments.length; j++)
+							if (c === arguments[j])
+								return i;
+					}
+					return 0;
+				}
+
+				FIND('codemirror', function(com) {
+					var editor = com.editor;
+					meta.editor = editor;
+					editor.on('change', function(a, b) {
+						setTimeout2('autocomplete', function() {
+							var cur = editor.getCursor();
+							var line = editor.getLine(cur.line);
+							var text = line.substring(index, cur.ch);
+							var index = lastIndexOf(line, cur.ch, ' ', '>', '\t', ';', '.', '"', '\'', ')', '(', '<', ',');
+							if (index !== -1) {
+								if (text) {
+									snippets.index = index;
+									snippets.text = text;
+									editor.showHint(snippetsoptions);
+								}
+							}
+						}, 100);
+						editor.focus();
+					});
+				});
+
+				meta.modify = function(el) {
+					var opt = {};
+					opt.items = [];
+					opt.align = 'right';
+					opt.offsetY = -10;
+					opt.items.push({ name: '@(Create SQL)', value: 'modify', icon: 'wrench' });
+					opt.items.push({ name: '@(Drop SQL)', value: 'drop', icon: 'trash-o red' });
+					opt.element = el;
+					opt.callback = function(item) {
+						el = el.parent();
+						var name = el.text();
+						var type = el.attrd('type');
+						switch (type) {
+							case 'table':
+								if (item.value === 'drop') {
+									SET('dbview.query', 'DROP TABLE ' + name + ';');
+								} else {
+									meta.submitspecial(atob('U0VMRUNUICdDUkVBVEUgVEFCTEUgJyB8fCByZWxuYW1lIHx8IEUnKFxuJyB8fCBhcnJheV90b19zdHJpbmcoYXJyYXlfYWdnKEUnXHQnIHx8IGNvbHVtbl9uYW1lIHx8ICcgJyB8fCAgdHlwZSB8fCAnICd8fCBub3RfbnVsbCksIEUnLCBcbicpIHx8IEUnXG4pO1xuJyBhcyBjb2RlIEZST00gKFNFTEVDVCBjLnJlbG5hbWUsIGEuYXR0bmFtZSBBUyBjb2x1bW5fbmFtZSwgcGdfY2F0YWxvZy5mb3JtYXRfdHlwZShhLmF0dHR5cGlkLCBhLmF0dHR5cG1vZCkgYXMgdHlwZSwgQ0FTRSBXSEVOIGEuYXR0bm90bnVsbCBUSEVOICdOT1QgTlVMTCcgRUxTRSAoU0VMRUNUIENBU0UgV0hFTiB4LmNvbHVtbl9kZWZhdWx0IElTIE5VTEwgVEhFTiAnTlVMTCcgRUxTRSAoJ0RFRkFVTFQgJyB8fCB4LmNvbHVtbl9kZWZhdWx0KSBFTkQgRlJPTSBpbmZvcm1hdGlvbl9zY2hlbWEuY29sdW1ucyB4IFdIRVJFIHgudGFibGVfbmFtZT1jLnJlbG5hbWUgQU5EIHguImNvbHVtbl9uYW1lIj1hdHRuYW1lIExJTUlUIDEpIEVORCBBUyBub3RfbnVsbCBGUk9NIHBnX2NsYXNzIGMsIHBnX2F0dHJpYnV0ZSBhLCBwZ190eXBlIHQgV0hFUkUgYy5yZWxuYW1lPSd7MH0nIEFORCBhLmF0dG51bSA+IDAgQU5EIGEuYXR0cmVsaWQgPSBjLm9pZCBBTkQgYS5hdHR0eXBpZCA9IHQub2lkIE9SREVSIEJZIGEuYXR0bnVtKSBBUyBzY2hlbWEgR1JPVVAgQlkgcmVsbmFtZTs=').format(name), function(response) {
+										var sql = (response.value && response.value[0] ? response.value[0].code : '') || '';
+										meta.submitspecial('SELECT indexdef as code FROM pg_indexes WHERE tablename=\'{0}\';'.format(name), function(response) {
+											var tmp = [];
+											for (var i = 0; i < response.value.length; i++)
+												tmp.push(response.value[i].code.replace('CREATE INDEX', 'CREATE INDEX IF NOT EXISTS').replace('CREATE UNIQUE INDEX', 'CREATE UNIQUE INDEX IF NOT EXISTS') + ';');
+											if (tmp.length)
+												sql += '\n' + tmp.join('\n');
+											meta.submitspecial(atob('U0VMRUNUICdBTFRFUiBUQUJMRSB7MH0gQUREIENPTlNUUkFJTlQgJyB8fCBjb25uYW1lIHx8ICcgJyB8fCBwZ19nZXRfY29uc3RyYWludGRlZihjLm9pZCkgQVMgY29kZSBGUk9NIHBnX2NvbnN0cmFpbnQgYyBKT0lOIHBnX25hbWVzcGFjZSBuIE9OIG4ub2lkPWMuY29ubmFtZXNwYWNlIFdIRVJFIGNvbnR5cGUgSU4gKCdmJywncCcpIEFORCBjb25yZWxpZDo6cmVnY2xhc3M6OnRleHQ9J3swfScgT1JERVIgQlkgY29udHlwZQ==').format(name), function(response) {
+												var tmp = [];
+												for (var i = 0; i < response.value.length; i++)
+													tmp.push(response.value[i].code + ';');
+												if (tmp.length)
+													sql += '\n' + tmp.join('\n');
+												SET('dbview.query', 'DROP TABLE ' + name + ';\n' + sql.trim());
+											});
+										});
+									});
+								}
+								break;
+							case 'view':
+								if (item.value === 'drop') {
+									SET('dbview.query', 'DROP VIEW ' + name + ';');
+								} else {
+									meta.submitspecial('SELECT pg_get_viewdef(\'{0}\', true) AS code'.format(name), function(response) {
+										var sql = (response.value && response.value[0] ? response.value[0].code : '') || '';
+										sql && SET('dbview.query', 'CREATE OR REPLACE VIEW AS\n  ' + sql.trim() + ';');
+									});
+								}
+								break;
+							case 'function':
+							case 'procedure':
+								if (item.value === 'drop') {
+									SET('dbview.query', 'DROP ' + type.toUpperCase() + ' ' + name + ';');
+								} else {
+									meta.submitspecial('SELECT pg_get_functiondef(oid) AS code FROM pg_proc WHERE proname=\'{0}\'; code'.format(name), function(response) {
+										var sql = (response.value && response.value[0] ? response.value[0].code : '') || '';
+										sql && SET('dbview.query', sql.trim());
+									});
+								}
+								break;
+						}
+					};
+					SETTER('menu/show', opt);
+				};
+
+				meta.refresh = function() {
+					refreshschema(conn, function(response) {
+						meta.tree = response;
+						UPD('dbview.tree');
+					});
+				};
+
+				meta.options = function(el) {
+
+					var opt = {};
+					opt.items = [];
+					opt.offsetY = -10;
+
+					if (keywords && keywords.length) {
+						opt.items.push({ name: '@(Add columns) (+' + keywords.length + ')', value: 'keywords', icon: 'columns' });
+						opt.items.push('-');
+					}
+
+					var maintenance = [];
+					maintenance.push({ name: 'Vacuum', sql: 'VACUUM FULL VERBOSE;', icon: 'code' });
+					maintenance.push({ name: 'Analyse', sql: 'ANALYZE VERBOSE;', icon: 'code' });
+					maintenance.push({ name: 'Reindex', sql: 'REINDEX DATABASE {0};', value: 'reindex', icon: 'code' });
+					opt.items.push({ name: '@(Maintenance)', value: 'maintenance', icon: 'wrench', children: maintenance });
+
+					var templates = [];
+					templates.push({ name: '@(Create table)', sql: atob('Q1JFQVRFIFRBQkxFICJwdWJsaWMiLiJ0YWJsZV9uYW1lIiAoCgkiaWQiIHZhcmNoYXIoMjUpIE5PVCBOVUxMLAoJIm5hbWUiIHZhcmNoYXIoNTApLAoJImlzcmVtb3ZlZCIgYm9vbCBERUZBVUxUIGZhbHNlLAoJImR0dXBkYXRlZCIgdGltZXN0YW1wLAoJImR0Y3JlYXRlZCIgdGltZXN0YW1wIERFRkFVTFQgbm93KCksCglQUklNQVJZIEtFWSAoImlkIikKKTs='), icon: 'code' });
+					templates.push({ name: '@(Create index)', sql: 'CREATE INDEX tbl_user_email_idx ON tbl_user(email text_ops);', icon: 'code' });
+					templates.push({ name: '@(Create view)', sql: 'CREATE OR REPLACE VIEW view_name AS\n\tSELECT * FROM tbl_user;', icon: 'code' });
+					templates.push({ name: '@(Create comment)', sql: 'COMMENT ON COLUMN "public"."tbl_user"."id" IS \'This is primary key\';', icon: 'code' });
+					templates.push({ name: '@(Add column)', sql: 'ALTER TABLE tbl_user ADD isremoved BOOLEAN DEFAULT FALSE;', icon: 'code' });
+					templates.push({ name: '@(Add constraint)', sql: 'ALTER TABLE tbl_user ADD CONSTRAINT "tbl_user_openplatformid_fkey" FOREIGN KEY ("openplatformid") REFERENCES "public"."tbl_openplatform"("id") ON DELETE CASCADE ON UPDATE CASCADE;', icon: 'code' });
+					templates.push({ name: '@(Alter column)', sql: 'ALTER TABLE tbl_user ALTER COLUMN email TYPE VARCHAR(120);', icon: 'code' });
+					opt.items.push({ name: '@(Templates)', icon: 'folder', children: templates });
+
+					opt.element = el;
+					opt.callback = function(item) {
+
+						if (item.value === 'keywords') {
+							if (keywords)
+								meta.editor.replaceSelection(keywords.join(','));
+							return;
+						}
+
+						if (item.value === 'reindex') {
+							meta.submitspecial('SELECT current_database() as name', function(response) {
+								if (response.value && response.value[0])
+									SET('dbview.query', item.sql.format(response.value[0].name));
+							});
+							return;
+						}
+
+						if (item.sql)
+							SET('dbview.query', item.sql);
+
+					};
+					SETTER('menu/show', opt);
+				};
+
+				meta.execute = function() {
+					meta.submit(meta.editor.getSelection() || meta.editor.getValue());
+				};
+
+				meta.submit = function(sel, val) {
+					var value = sel || val;
+					var lines = value.split('\n');
+					var cmd = [];
+
+					for (var i = 0; i < lines.length; i++) {
+						var line = lines[i].trim();
+						if (line.substring(0, 2) !== '--')
+							cmd.push(line);
+					}
+
+					value = cmd.join('\n');
+					meta.submit2(value);
+
+					/*
+					if ((/(delete\sfrom|update|drop)\s/i).test(value)) {
+						setTimeout(function() {
+							SETTER('confirm/show2', '@(Are you sure you want to perform this operation?)', ['"play-circle" @(Execute)', '@(Cancel)'], function() {
+								meta.submit2(value);
+							});
+						}, 700);
+					} else
+						meta.submit2(value);*/
+				};
+
+				meta.submitspecial = function(query, callback) {
+					AJAX('POST /api/database/pg/', { connection: conn, query: query }, ASETTER('message/response', callback));
+				};
+
+				meta.submit2 = function(value) {
+					var query = value.trim();
+					if (!query)
+						return;
+
+					SETTER('loading/show');
+					meta.time = Date.now();
+					AJAX('POST /api/database/pg/', { connection: conn, query: query }, ASETTER('message/response', function(response) {
+						SET('dbview.duration', (Date.now() - meta.time) + 'ms');
+						SETTER('loading/hide', 500);
+						SET('dbview.search', '');
+
+						var rows = response.value;
+						var arr = [];
+						var keys = rows.length ? Object.keys(rows[0]) : EMPTYARRAY;
+
+						keywords = keys;
+
+						if (keys.length)
+							SET('dbview.keywords', keywords);
+						else
+							NUL('dbview.keywords');
+
+						for (var i = 0; i < rows.length; i++) {
+							var obj = formatrow(rows[i], i + 1);
+							arr.push({ data: rows[i], json: obj.html, search: obj.search });
+						}
+
+						SET('dbview.rows', arr);
+						FIND('codemirror', function(com) {
+							com.editor.focus();
+						});
+
+						var history = CACHE(meta.id);
+						if (history) {
+							var index = history.indexOf(query);
+							if (index !== -1)
+								history.splice(index, 1);
+							history.unshift(query);
+						} else
+							history = [query];
+
+						if (history.length > 50)
+							history.pop();
+
+						if ((/(drop|create)\s/i).test(query))
+							meta.refresh();
+
+						SETTER('#mainviewbox/resizescrollbar');
+						SETTER('#mainviewbox/scrolltop');
+
+						CACHE(meta.id, history, '1 year');
+					}));
+				};
+
+				meta.template = function(el) {
+					var type = el.attrd('type');
+					var fn = type !== 'view' && type !== 'table';
+					var q = fn ? el.text() : ('SELECT * FROM ' + el.text() + ' LIMIT 50');
+					SET('dbview.query', q);
+					if (!fn)
+						meta.submit(q);
+				};
+
+				meta.history = function(el) {
+					var opt = {};
+					opt.element = el;
+					opt.items = CACHE(meta.id) || EMPTYARRAY;
+					opt.minwidth = WW - 220;
+					opt.callback = function(val) {
+						SET('dbview.query', val);
+					};
+					SETTER('directory/show', opt);
+				};
+
+				SET('dbview', meta);
+			});
+		}
+
+		$(document).on('click', function() {
+			var ts = Date.now();
+			if (!dbview.lastclick || dbview.lastclick < (ts - 2000)) {
+				dbview.lastclick = ts;
+				W.top && W.top.postMessage(JSON.stringify({ type: 'windows', id: NAV.query.id }), '*');
+			}
+		});
+
+		function resizepanels(type, panels) {
+			var com = FIND('codemirror');
+			com.editor.setSize(null, panels.top.height() - 63);
+		}
+
+		ON('knockknock', function() {
+			var h = NOW.getHours();
+			if (user.darkmode === 2) {
+				var dark = h <= 6 || h >= 18;
+				var body = $('body');
+				var is = body.hclass('td');
+				if (dark) {
+					if (!is)
+						body.aclass('td')
+				} else {
+					if (is)
+						body.rclass('td');
+				}
+			}
+		});
+
+		function viewerdocument(el) {
+			var index = +el.attrd('index');
+			var colgroups = el.find('td').length;
+			var next = el.next();
+
+			if (next.hclass('doc-detail')) {
+				next.tclass('hidden');
+				return;
+			}
+
+			var row = dbview.rows[index];
+			el.after('<tr class="doc-detail" data-search="---"><td colspan="{0}"><pre>{1}</pre></td></tr>'.format(colgroups, FUNC.formatjson(row.data, 0)));
+			SETTER('#mainviewbox/resizescrollbar');
+		}
+
+		setTimeout(connectdb, 100);
+
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!--
+	It depends on "code editor"
+-->
+
+<div data---="invisible" class="invisible">
+	<div data---="inputsearch__componentator.search__placeholder:@(Search);$binding:1;$delay:50"></div>
+	<div data---="viewbox__componentator.search__margin:136;parent:.ui-dockable-body;scrollbar:1;scrollbarshadow:1" class="invisible">
+		<div data-bind="componentator.items__template" data---="search__componentator.search__selector:div">
+			<script type="text/html">
+				{{ foreach m in value }}
+					<div class="part exec{{ m | componentator_imported }}" data-exec="componentator/append" data-search="{{ m }}"><i class="fa fa-drafting-compass"></i><b class="exec add" data-exec="componentator/add" data-prevent="true"><i class="fa fa-check"></i></b>{{ m }}</div>
+				{{ end }}
+			</script>
+		</div>
+	</div>
+	<div class="panelcheckbox">
+		<div data---="checkbox__componentator.minify">@(Import minified)</div>
+		<div data---="checkbox__componentator.darkmode">@(Import CSS for dark-mode)</div>
+	</div>
+</div>
+
+<script>
+
+	CACHEPATH('componentator.minify', '1 year');
+	CACHEPATH('componentator.darkmode', '1 year');
+
+	var componentator_cache;
+
+	PLUGIN('componentator', function(exports) {
+
+		exports.reload = function() {
+
+			if (!W.componentator || W.componentator.darkmode == null)
+				SET('?.darkmode', true);
+
+			SETTER('dockable/show', 'prop');
+			SET('?.search', '');
+
+			componentator_cache = code.componentsdb.findItem('path', '/public/js/ui.js');
+			exports.refresh();
+			exports.element.SETTER(true, 'inputsearch/focus');
+		};
+
+		exports.refresh = function() {
+			AJAX('GET /api/componentator/', function(response) {
+				response.quicksort();
+				SET('?.items', response);
+			});
+		};
+
+		var createfile = function(filename, callback) {
+			var data = {};
+			data.folder = false;
+			data.path = FUNC.cleanpath(filename);
+			SETTER('loading/show');
+			AJAX('POST /api/files/{id}/create/'.arg(code.data), data, function(response) {
+				SETTER('loading/hide', 500);
+				callback(response);
+			});
+		};
+
+		exports.add = function(el) {
+
+			var parent = el.closest('.part');
+			var name = parent.attrd('search');
+			var isrefresh = false;
+			var isremove = false;
+			var meta;
+
+			WORKFLOW(function($) {
+
+				$.push('init', function($) {
+
+					if (!parent.hclass('imported')) {
+						SETTER('loading/show', '@(Importing "{0}")'.format(name));
+						$.next('check_js');
+						return;
+					}
+
+					var opt = {};
+					opt.is = false;
+					opt.element = el;
+					opt.items = [{ id: 'update', name: '@(Update)', icon: 'fa fa-sync' }, { id: 'remove', name: '@(Remove)', icon: 'fa fa-trash-o red' }];
+					opt.hide = function() {
+						if (!opt.is)
+							$.destroy();
+					};
+
+					opt.callback = function(item) {
+						opt.is = true;
+						isremove = item.id === 'remove';
+						SETTER('loading/show', '@(Importing "{0}")'.format(name));
+						$.next('check_js');
+					};
+
+					SETTER('menu/show', opt);
+				});
+
+				$.push('check_js', function($) {
+					var jsindex = FUNC.treeindex(code.tree, '/public/js/ui.js');
+					if (jsindex == null) {
+						createfile('/public/js/ui.js', function(response) {
+							if (response.success) {
+								isrefresh = true;
+								$.next('check_css');
+							} else {
+								SETTER('loading/hide');
+								FUNC.warning(response);
+								$.destroy();
+							}
+						});
+					} else
+						$.next('check_css');
+				});
+
+				$.push('check_css', function($) {
+					var cssindex = FUNC.treeindex(code.tree, '/public/css/ui.css');
+					if (cssindex == null) {
+						createfile('/public/css/ui.css', function(response) {
+							if (response.success) {
+								isrefresh = true;
+								$.next('meta');
+							} else {
+								SETTER('loading/hide');
+								FUNC.warning(response);
+								$.destroy();
+							}
+						});
+					} else
+						$.next('meta');
+				});
+
+				$.push('meta', function($) {
+
+					if (isrefresh) {
+						isrefresh = false;
+						SETTER('websocket/send', { TYPE: 'refresh', id: code.data.id });
+					}
+
+					// reads meta
+					var data = {};
+					data.ext = 'json';
+					data.name = name;
+					AJAX('GET /api/componentator/download/', data, function(response) {
+						meta = PARSE(response);
+						$.next('download_js');
+					});
+
+				});
+
+				$.push('download_js', function($) {
+
+					if (isremove) {
+						$.next('edit_js');
+						return;
+					}
+
+					var path = '/public/js/ui.js';
+					var data = {};
+					data.ext = 'js';
+					data.minify = componentator.minify === true;
+					data.name = name;
+					AJAX('GET /api/componentator/download/', data, function(component) {
+						$.response_js = component;
+						$.next('edit_js');
+					});
+
+				});
+
+				$.push('edit_js', function($) {
+					var path = '/public/js/ui.js';
+					AJAX('GET /api/projects/{id}/edit/'.arg(code.data), { path: path }, function(response) {
+						response = FUNC.jcomponent_update(name, 'js', response.trim(), $.response_js || '', meta);
+						var data = {};
+						data.body = response;
+						data.path = path;
+						data.parts = FUNC.parts_parser(response, 'javascript').components;
+						AJAX('POST /api/files/{id}/ REPEAT'.arg(code.data), data, ASETTER('message/response', function(response) {
+
+							var parts = code.componentsdb.findItem('path', data.path);
+							if (parts) {
+								parts.items = data.parts;
+							} else {
+								parts = {};
+								parts.path = data.path;
+								parts.items = data.parts;
+								code.componentsdb.push(parts);
+								componentator_cache = parts;
+							}
+
+							parent.tclass('imported', !isremove);
+							UPD('code.componentsdb');
+							SETTER('loading/hide', 500);
+							FUNC.wssend({ TYPE: 'save', connid: common.id, projectid: code.projectid, id: user.id, user: user.name });
+							common.electron && code.data.repository && user.localsave && EXEC('code/savelocal', true, data.path, data.body);
+							FUNC.livereload(data.path);
+							$.next('download_css');
+						}));
+					});
+				});
+
+				$.push('download_css', function($) {
+
+					if (isremove) {
+						$.next('edit_css');
+						return;
+					}
+
+					// imports CSS
+					var path = '/public/css/ui.css';
+					var data = {};
+					data.ext = 'css';
+					data.minify = componentator.minify === true;
+					data.name = name;
+					data.darkmode = componentator.darkmode === true;
+					AJAX('GET /api/componentator/download/', data, function(component) {
+						$.response_css = component;
+						$.next('edit_css');
+					});
+
+				});
+
+				$.push('edit_css', function($) {
+					var path = '/public/css/ui.css';
+					AJAX('GET /api/projects/{id}/edit/'.arg(code.data), { path: path }, function(response) {
+						response = FUNC.jcomponent_update(name, 'css', response.trim(), $.response_css || '', meta);
+						var data = {};
+						data.body = response;
+						data.path = path;
+						data.parts = [];
+						AJAX('POST /api/files/{id}/ REPEAT'.arg(code.data), data, ASETTER('message/response', function(response) {
+							SETTER('loading/hide', 500);
+							FUNC.wssend({ TYPE: 'save', connid: common.id, projectid: code.projectid, id: user.id, user: user.name });
+							common.electron && code.data.repository && user.localsave && EXEC('code/savelocal', true, data.path, data.body);
+							FUNC.livereload(data.path);
+							$.next('done');
+						}));
+					});
+				});
+
+				$.push('done', function($) {
+					var arr = ['welldone', 'impressive', 'excellent', 'brutality'];
+					var index = (Math.random() * arr.length) >> 0;
+					FUNC.totalcombat(arr[index]);
+					SETTER('notifybar/success', '@(Imported successfully: {0})'.format(name));
+					SETTER('loading/hide');
+					$.destroy();
+				});
+
+				$.next('init');
+
+			});
+		};
+
+		exports.append = function(el) {
+
+			var data = {};
+			var allowed = { js: 1, html: 1, css: 1 };
+			var editor = FIND('editor').editor;
+			var cur = editor.getModeAt(editor.getCursor());
+			var name = el.attrd('search');
+
+			// reads meta
+			var data = {};
+			data.ext = 'json';
+			data.name = name;
+
+			AJAX('GET /api/componentator/download/', data, function(meta) {
+
+				meta = PARSE(meta);
+
+				var data = {};
+				data.ext = FUNC.getext(cur.helperType || cur.name);
+				data.minify = componentator.minify === true;
+				data.darkmode = componentator.darkmode === true;
+
+				if (!allowed[data.ext]) {
+					FUNC.warning('@(Snippet can\'t be inserted becasue this type of file is not supported.)');
+					return;
+				}
+
+				data.name = name;
+				AJAX('GET /api/componentator/download/', data, function(response) {
+
+					if (data.ext !== 'html') {
+						var comment_beg = (data.ext === 'css' ? '/* Component: {0} */' : '// Component: {0}').format(name) + '\n';
+						var comment_end = (data.ext === 'css' ? '/* End: {0} */' : '// End: {0}').format(name) + '\n';
+						var version = (data.ext === 'css' ? '/* Version: {0} */' : '// Version: {0}').format(meta.version) + '\n';
+						var updated = (data.ext === 'css' ? '/* Updated: {0} */' : '// Updated: {0}').format((meta.dateupdated || meta.datecreated).format('yyyy-MM-dd HH:mm')) + '\n';
+						response = comment_beg + version + updated + response + '\n' + comment_end;
+					}
+
+					EXEC('code/append', response);
+				});
+			});
+
+		};
+	});
+
+	Thelpers.componentator_imported = function(value) {
+
+		if (!componentator_cache)
+			return '';
+
+		value = value.toLowerCase();
+		if (value.charAt(1) === '-')
+			value = value.substring(2);
+		return componentator_cache.items.findIndex(function(item) {
+			return item.name.indexOf(value) !== -1
+		}) === -1 ? '' : ' imported';
+	};
+
+</script>
