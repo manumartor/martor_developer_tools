@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# nodeenv.sh v1.2.0
+# nodeenv.sh v1.2.1
 #
 # Changes:
+# - v1.2.1: Fix platform win detection for MINGW64_NT
 # - v1.2.0: Refactorized node.zip download for be multiplatforms
 # - v1.1.0: Added download node.zip if node folder not exists
 # - v1.0.0: 1st development
@@ -24,17 +25,18 @@ platform='unknown'
 unamestr=$(uname)
 if [[ "$unamestr" == 'Linux' ]]; then
     platform='linux'
-elif [[ "$unamestr" == 'MINGW64_NT-10.0-19044' ]]; then
+elif [[ "${unamestr:0:10}" == 'MINGW64_NT' ]]; then
     platform='win'
 fi
 echo -e "\nPlatform: $platform"
-echo -e "unamestr: $unamestr"
+echo -e "Unamestr: $unamestr"
+echo ""
 
 
 #prepare nodejs enviroment if needed and nodejs already installed
 if ! [ -x "$(command -v node)" ]; then
     if [[ -d "$nodepath" ]]; then
-        echo -e "nodejs already installed in path $nodepath... launching it...\n\n"
+        echo -e "nodejs already installed at path $nodepath...\nlaunching it..."
         export PATH=$PATH:$nodepath
         export NODE_PATH=$nodepath/node_modules
     fi
