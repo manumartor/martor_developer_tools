@@ -3,6 +3,8 @@
 # nodeenv.sh v1.2.1
 #
 # Changes:
+# - v1.2.2: Changed node source download to curl
+# - v1.2.2: Changed nodepath to $TMP folder
 # - v1.2.1: Fix platform win detection for MINGW64_NT
 # - v1.2.0: Refactorized node.zip download for be multiplatforms
 # - v1.1.0: Added download node.zip if node folder not exists
@@ -15,7 +17,7 @@
 # - wuiwui
 
 nodeversion="v18.14.0"
-nodepath=../node-v18
+nodepath=$TMP/node-v18
 
 
 cd $(dirname "$0")
@@ -61,15 +63,13 @@ if ! [ -x "$(command -v node)" ]; then
     fi
 
     if ! [[ "$downloadurl" == 'unknown' ]]; then
-        wget --no-check-certificate "https://nodejs.org/dist/$nodeversion/$downloadurl$extension" -v -O $TEMP/nodejs-inst.zip 
+        curl -SL "https://nodejs.org/dist/$nodeversion/$downloadurl$extension" -o $TEMP/nodejs-inst.zip 
         unzip $TEMP/nodejs-inst.zip -d $TEMP
         rm $TEMP/nodejs-inst.zip
         rm -rf $nodepath
         mv $TEMP/$downloadurl $nodepath
         export PATH=$PATH:$nodepath
         export NODE_PATH=$nodepath/node_modules
-
-        npm install -g nan socket.io-client node-machine-id robotjs naudiodon
 
         echo -e "nodejs installed in path $nodepath... launching it...\n\n"
     fi
