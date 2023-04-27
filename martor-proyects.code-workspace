@@ -1,0 +1,52 @@
+{
+	"folders": [
+		{
+			"name": "martor_developers_tools-github",
+			"path": "."
+		},
+		{
+			"name": "martor-developers-tools",
+			"path": "../martor-developers-tools"
+		},
+		{
+			"name": "totaljs-commoncomponents",
+			"path": "../totaljs-commoncomponents"
+		},
+		{
+			"name": "conversational-interfacebase",
+			"path": "../conversational-interfacebase"
+		},
+		{
+			"name": "wuiwui",
+			"path": "../wuiwui"
+		},
+		{
+			"name": "martor-3d-verso",
+			"path": "../martor-3d-verso"
+		},
+		{
+			"name": "martor-api-template",
+			"path": "../martor-api-template"
+		},
+		{
+			"name": "martor-api-constructron",
+			"path": "../martor-api-constructron"
+		},
+		{
+			"name": "martor-api",
+			"path": "../martor-api"
+		},
+		{
+			"name": "maio-wbplanner-api-v1",
+			"path": "../maio-wbplanner-api-v1"
+		},
+		{
+			"name": "maio-wbplanner-api",
+			"path": "../maio-wbplanner-api"
+		},
+		{
+			"path": "../martor-devops-runner"
+		}
+	],
+	"settings": {}
+}
