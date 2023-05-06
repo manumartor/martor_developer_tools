@@ -9,6 +9,10 @@
 			"path": "../martor-developers-tools"
 		},
 		{
+			"name": "martor-devops-runner",
+			"path": "../martor-devops-runner"
+		},
+		{
 			"name": "totaljs-commoncomponents",
 			"path": "../totaljs-commoncomponents"
 		},
@@ -25,12 +29,20 @@
 			"path": "../martor-3d-verso"
 		},
 		{
-			"name": "martor-api-template",
-			"path": "../martor-api-template"
+			"name": "martor-user-auth-system",
+			"path": "../martor-user-auth-system"
 		},
 		{
 			"name": "martor-api-constructron",
 			"path": "../martor-api-constructron"
+		},
+		{
+			"name": "martor-api-template",
+			"path": "../martor-api-template"
+		},
+		{
+			"name": "martor-app-template",
+			"path": "../martor-app-template"
 		},
 		{
 			"name": "martor-api",
@@ -45,7 +57,8 @@
 			"path": "../maio-wbplanner-api"
 		},
 		{
-			"path": "../martor-devops-runner"
+			"name": "maio-wbplanner-app",
+			"path": "../maio-wbplanner-app"
 		}
 	],
 	"settings": {}
