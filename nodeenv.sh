@@ -49,6 +49,7 @@ fi
 
 #install nodejs if needed
 if ! [ -x "$(command -v node)" ]; then
+    echo "Installing nodejs...."
     downloadurl='unknown'
     if [[ "$platform" == 'linux' ]]; then
         apt-get install build-essential
