@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# nodeenv.sh v1.2.1
+# nodeenv.sh v1.3.0
 #
 # Changes:
+# - v1.3.0: Updated node version to v18.16.0
 # - v1.2.2: Changed node source download to curl
 # - v1.2.2: Changed nodepath to $TMP folder
 # - v1.2.1: Fix platform win detection for MINGW64_NT
@@ -15,8 +16,10 @@
 # - martor-constructron
 # - martor-rdpjs
 # - wuiwui
+# - martor-api-template
+# - martor-app-template
 
-nodeversion="v18.14.0"
+nodeversion="v18.16.0"
 nodepath=$TMP/node-v18
 
 
