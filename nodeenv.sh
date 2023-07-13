@@ -87,5 +87,5 @@ fi
 (
     $@
 ) || (
-    echo "Error launching app"
+    echo "Error launching app!!\nIf error is from nodejs enviroment try to execute: rm -rf $nodepath"
 )
