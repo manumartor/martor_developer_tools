@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# nodeenv.sh v1.3.0
+# nodeenv.sh v1.4.0
 #
 # Changes:
+# - v1.4.0: Try to control nodejs enviroment errors
 # - v1.3.0: Updated node version to v18.16.0
 # - v1.2.2: Changed node source download to curl
 # - v1.2.2: Changed nodepath to $TMP folder
@@ -87,5 +88,8 @@ fi
 (
     $@
 ) || (
-    echo "Error launching app!!\nIf error is from nodejs enviroment try to execute: rm -rf $nodepath"
+    # - v1.4.0: Try to control nodejs enviroment errors
+    echo ""
+    echo "Error launching app!!" 
+    echo "If error is from nodejs enviroment try to execute:\n$ rm -rf $nodepath && ./nodeenv.sh $@"
 )
