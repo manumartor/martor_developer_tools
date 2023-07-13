@@ -84,4 +84,8 @@ if ! [ -x "$(command -v node)" ]; then
   exit 1
 fi
 
-$@
+(
+    $@
+) || (
+    echo "Error launching app"
+)
