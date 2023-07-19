@@ -90,6 +90,6 @@ fi
 ) || (
     # - v1.4.0: Try to control nodejs enviroment errors
     echo ""
-    echo "Error launching app!!" 
+    echo "Error launching nodejs script" 
     echo "If error is from nodejs enviroment try to execute:\n$ rm -rf $nodepath && ./nodeenv.sh $@"
 )

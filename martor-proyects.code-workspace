@@ -49,6 +49,10 @@
 			"path": "../martor-api"
 		},
 		{
+			"name": "martor-weather-api",
+			"path": "../martor-weather-api"
+		},
+		{
 			"name": "maio-wbplanner-api-v1",
 			"path": "../maio-wbplanner-api-v1"
 		},
