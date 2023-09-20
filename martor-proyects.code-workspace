@@ -33,6 +33,10 @@
 			"path": "../martor-user-auth-system"
 		},
 		{
+			"name": "martor-superadmin-proxyreverse",
+			"path": "../martor-superadmin-proxyreverse"
+		},
+		{
 			"name": "martor-api-constructron",
 			"path": "../martor-api-constructron"
 		},
@@ -63,6 +67,18 @@
 		{
 			"name": "maio-wbplanner-app",
 			"path": "../maio-wbplanner-app"
+		},
+		{
+			"name": "my-estate-manager",
+			"path": "../my-estate-manager"
+		},
+		{
+			"name": "my-estate-manager-api",
+			"path": "../my-estate-manager-api"
+		},
+		{
+			"name": "my-estate-manager-app",
+			"path": "../my-estate-manager-app"
 		}
 	],
 	"settings": {}
