@@ -22,8 +22,7 @@
 # - martor-app-template
 
 nodeversion="v20.11.1"
-TMP_NODE_PATH=$HOME/.nodejs
-nodepath=$TMP_NODE_PATH/node-v18
+nodepath=$HOME/.nodejs
 
 
 cd $(dirname "$0")
