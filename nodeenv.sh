@@ -3,7 +3,7 @@
 # nodeenv.sh v1.5.0
 #
 # Changes:
-# - v1.5.0: Updated node version to v20.11.1
+# - v1.5.0: Updated node version to v20.11.1 
 # - v1.4.0: Try to control nodejs enviroment errors
 # - v1.3.0: Updated node version to v18.16.0
 # - v1.2.2: Changed node source download to curl
