@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# nodeenv.sh v1.4.0
+# nodeenv.sh v1.5.0
 #
 # Changes:
+# - v1.5.0: Updated node version to v20.11.1
 # - v1.4.0: Try to control nodejs enviroment errors
 # - v1.3.0: Updated node version to v18.16.0
 # - v1.2.2: Changed node source download to curl
@@ -20,8 +21,9 @@
 # - martor-api-template
 # - martor-app-template
 
-nodeversion="v18.16.0"
-nodepath=$TMP/node-v18
+nodeversion="v20.11.1"
+TMP_NODE_PATH=$HOME/.nodejs
+nodepath=$TMP_NODE_PATH/node-v18
 
 
 cd $(dirname "$0")
@@ -72,6 +74,11 @@ if ! [ -x "$(command -v node)" ]; then
         unzip $TEMP/nodejs-inst.zip -d $TEMP
         rm $TEMP/nodejs-inst.zip
         rm -rf $nodepath
+
+        if ! [[ -d "$nodepath" ]]; then
+            mkdir -p "$nodepath"
+        fi
+
         mv $TEMP/$downloadurl $nodepath
         export PATH=$PATH:$nodepath
         export NODE_PATH=$nodepath/node_modules
