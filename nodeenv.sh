@@ -73,11 +73,6 @@ if ! [ -x "$(command -v node)" ]; then
         unzip $TEMP/nodejs-inst.zip -d $TEMP
         rm $TEMP/nodejs-inst.zip
         rm -rf $nodepath
-
-        if ! [[ -d "$nodepath" ]]; then
-            mkdir -p "$nodepath"
-        fi
-
         mv $TEMP/$downloadurl $nodepath
         export PATH=$PATH:$nodepath
         export NODE_PATH=$nodepath/node_modules
