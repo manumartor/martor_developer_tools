@@ -39,13 +39,21 @@ echo -e "\nPlatform: $platform"
 echo -e "Unamestr: $unamestr"
 echo ""
 
+set_env(){
+    if [[ "$platform" == 'linux' ]]; then
+        export PATH=$PATH:$nodepath/bin
+    else
+        export PATH=$PATH:$nodepath
+    fi
+    export NODE_PATH=$nodepath/node_modules
+}
+
 
 #prepare nodejs enviroment if needed and nodejs already installed
 if ! [ -x "$(command -v node)" ]; then
     if [[ -d "$nodepath" ]]; then
         echo -e "nodejs already installed at path $nodepath...\nlaunching it..."
-        export PATH=$PATH:$nodepath
-        export NODE_PATH=$nodepath/node_modules
+        set_env
     fi
 fi
 
@@ -81,9 +89,8 @@ if ! [ -x "$(command -v node)" ]; then
         rm -rf $nodepath
         mkdir $nodepath
         mv $TEMP/$downloadurl/* $nodepath
-        export PATH=$PATH:$nodepath
-        export NODE_PATH=$nodepath/node_modules
-
+        
+        set_env
         echo -e "nodejs installed in path $nodepath... launching it...\n\n"
     fi
 fi
