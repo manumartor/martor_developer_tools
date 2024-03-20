@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# nodeenv.sh v1.5.0
+# nodeenv.sh v1.6.0
 #
 # Changes:
+# - v1.6.0: Put on working on Linux arm64
 # - v1.5.0: Updated node version to v20.11.1 
 # - v1.4.0: Try to control nodejs enviroment errors
 # - v1.3.0: Updated node version to v18.16.0
