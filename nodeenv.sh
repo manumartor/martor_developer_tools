@@ -79,6 +79,7 @@ if ! [ -x "$(command -v node)" ]; then
 
     if ! [[ "$downloadurl" == 'unknown' ]]; then
         rm -rf $nodepath
+        mkdir $nodepath
         mv $TEMP/$downloadurl/* $nodepath
         export PATH=$PATH:$nodepath
         export NODE_PATH=$nodepath/node_modules
