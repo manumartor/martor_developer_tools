@@ -59,7 +59,7 @@ if ! [ -x "$(command -v node)" ]; then
         apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
         apt-get install libopencv-dev
 
-        downloadurl="node-$nodeversion-linux-x64"
+        downloadurl="node-$nodeversion-linux-armv7l"
         extension=".tar.xz"
         
         #https://nodejs.org/dist/v20.11.1/node-v20.11.1-linux-armv7l.tar.xz
