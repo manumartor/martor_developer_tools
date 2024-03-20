@@ -53,7 +53,7 @@ set_env(){
 if ! [ -x "$(command -v node)" ]; then
     if [[ -d "$nodepath" ]]; then
         echo -e "nodejs already installed at path $nodepath...\nlaunching it..."
-        set_env();
+        set_env
     fi
 fi
 
@@ -90,7 +90,7 @@ if ! [ -x "$(command -v node)" ]; then
         mkdir $nodepath
         mv $TEMP/$downloadurl/* $nodepath
         
-        set_env();
+        set_env
         echo -e "nodejs installed in path $nodepath... launching it...\n\n"
     fi
 fi
