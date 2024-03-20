@@ -62,8 +62,9 @@ if ! [ -x "$(command -v node)" ]; then
         downloadurl="node-$nodeversion-linux-x64"
         extension=".tar.xz"
         
+        #https://nodejs.org/dist/v20.11.1/node-v20.11.1-linux-armv7l.tar.xz
         curl -SL "https://nodejs.org/dist/$nodeversion/$downloadurl$extension" -o $TEMP/nodejs-inst$extension 
-        tar -xvzf $TEMP/nodejs-inst$extension -C $TEMP
+        tar -xvf "$TEMP/nodejs-inst$extension" -C $TEMP
         rm $TEMP/nodejs-inst$extension
     elif [[ "$platform" == 'win' ]]; then
         #https://sourceforge.net/projects/opencvlibrary/files/opencv-win/3.4.3/opencv-3.4.3-vc14_vc15.exe/download
@@ -78,7 +79,7 @@ if ! [ -x "$(command -v node)" ]; then
 
     if ! [[ "$downloadurl" == 'unknown' ]]; then
         rm -rf $nodepath
-        mv $TEMP/$downloadurl $nodepath
+        mv $TEMP/$downloadurl/* $nodepath
         export PATH=$PATH:$nodepath
         export NODE_PATH=$nodepath/node_modules
 
